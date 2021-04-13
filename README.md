@@ -62,6 +62,7 @@ kubectl get svc
 
 We have the external-ip from earlier, which we are going to reuse here. The following JSON request can now be sent as with a HTTP POST method, and we will receive the expected response.
 
+```
 {
     "cylinders": 8,
     "displacement": 307.0,
@@ -72,5 +73,6 @@ We have the external-ip from earlier, which we are going to reuse here. The foll
     "origin": 1,
     "car_name": "chevrolet chevelle malibu"
 }
+```
 
 In just `0.29` seconds, we received the prediction of this car, and our machine learning model predicted 16.383.
