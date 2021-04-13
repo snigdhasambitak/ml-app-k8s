@@ -1,0 +1,68 @@
+# Basic application identity and properties
+App: "ml-app"
+# ImagePullPolicy: "IfNotPresent"
+ServiceName: "ml-app"
+
+#change to 443 later
+ServerPort: 80
+
+# Container Image details and details as to where the HELM repo is present
+Image: "snigdhasambit/ml-app:latest"
+Commit: "int" # This value is overwritten in any deploy job.
+# ImagePullSecret: "das-templates-pull-secret" #secret used to get the image from Quay eg: xyzteam-quay-pull-secret
+ContainerPort: 8080
+
+# Resource Requests and Limits
+# This would be where the application memory and resource needs are specified
+Cpu: "500m"
+GPU: 1
+Memory: "8Gi"
+MaxCpu: "1000m"
+MaxGPU: 1
+MaxMemory: "12Gi"
+
+gpuEnv: "true"
+## Deployment Strategy
+UpdateStrategy_maxUnavailable: 1
+UpdateStrategy_maxSurge : 1
+
+# Capacity and Scaling - Most of this section is commented but can be used to customize
+MinReplicas: 1
+MaxReplicas: 1
+
+HPACreate: "false"
+scaleOnCPU: "true"
+scaleOnMemory: "true"
+HPACpuUtilTarget: 80
+HPAMemoryUtilTarget: 80
+
+### only specify one of the two below
+PDBMaxUnavailable: 1
+
+hostnameForDNS: "mlflow-dev.example.com"
+### CronJob
+#CronJobCreate: "true"
+
+# Probes
+# LivenessProbePath: "/health"
+# LivenessProbeInitialDelaySeconds: 45
+# LivenessProbePeriodSeconds: 5
+# LivenessTimeoutSeconds: 5
+# LivenessSuccessThreshold: 1
+# LivenessFailureThreshold: 2
+#
+# ReadinessProbePath: "/health"
+# ReadinessProbeInitialDelaySeconds: 45
+# ReadinessProbePeriodSeconds: 5
+# ReadinessTimeoutSeconds: 5
+# ReadinessSuccessThreshold: 1
+# ReadinessFailureThreshold: 2
+
+# Prometheus Scraping is specified to true by default but requires setting up from the application
+# to get the best of this. Use spring-actuators to manage prometheus.
+# PrometheusScrapeEnabled: "true"
+# PrometheusScrapePath: "/prometheus"
+# PrometheusScrapePort: "8080"
+
+# Network Policy
+networkPolicyEnabled: "true"

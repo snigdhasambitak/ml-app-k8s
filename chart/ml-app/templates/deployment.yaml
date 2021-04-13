@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  # GPU
+  {{- if .Values.gpuEnv }}
+  annotations:
+    workload: nvidia-gpu
+  {{ end }}
+  labels:
+    app: "{{ .Values.App }}"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.App }}
+      release: {{ .Release.Name }}
+  replicas: {{ .Values.MinReplicas }}
+  strategy:
+    rollingUpdate:
+      maxUnavailable: {{ .Values.UpdateStrategy_maxUnavailable }}
+      maxSurge: {{ .Values.UpdateStrategy_maxSurge }}
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.App }}"
+        release: {{ .Release.Name }}
+      {{- if .Values.gpuEnv }}
+      annotations:
+        workload: nvidia-gpu
+      {{ end }}
+    spec:
+      # GPU
+      {{- if .Values.gpuEnv }}
+      tolerations:
+      - key: workload
+        operator: Equal
+        value: nvidia-gpu
+        effect: NoSchedule
+      {{ end }}
+      containers:
+        - name: {{ .Values.App }}
+          image: "{{ .Values.Image }}:{{ .Values.Commit }}"
+          {{- if .Values.gpuEnv }}
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: "compute,utility"
+            - name: NVIDIA_REQUIRE_CUDA
+              value: "cuda>=10.0"
+            - name: LD_LIBRARY_PATH
+              value: "/usr/lib64"
+          {{ end }}
+          # imagePullPolicy: {{ .Values.ImagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.ContainerPort }}
+          # securityContext:
+          #   privileged: true
+          resources:
+            limits:
+              # GPU
+              {{- if .Values.gpuEnv }}
+              nvidia.com/gpu: {{ .Values.MaxGPU | quote }}
+              {{ end }}
+              cpu: {{ .Values.MaxCpu | quote }}
+              memory: {{ .Values.MaxMemory | quote }}
+            requests:
+              # GPU
+              {{- if .Values.gpuEnv }}
+              nvidia.com/gpu: {{ .Values.GPU | quote }}
+              {{ end }}
+              cpu: {{ .Values.Cpu | quote }}
+              memory: {{ .Values.Memory | quote }}
+      # {{- if .Values.ImagePullSecret }}
+      # imagePullSecrets:
+      #   - name: {{ .Values.ImagePullSecret }}
+      # {{ end }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 70
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: release
+                  operator: In
+                  values:
+                  - {{ .Release.Name }}
+              topologyKey: kubernetes.io/hostname
+          - weight: 30
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: release
+                  operator: In
+                  values:
+                  - {{ .Release.Name }}
+              topologyKey: topology.kubernetes.io/zone

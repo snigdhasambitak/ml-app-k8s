@@ -1,0 +1,32 @@
+{{- if .Values.HPACreate }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: "{{ .Release.Name }}"
+  labels:
+    app: "{{ .Values.App }}"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    commit: "{{ .Values.Commit }}"
+    environment: "{{ .Values.Environment }}"
+    release: "{{ .Release.Name }}"
+spec:
+  minReplicas: {{ .Values.MinReplicas }}
+  maxReplicas: {{ .Values.MaxReplicas }}
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: "{{ .Release.Name }}"
+  metrics:
+  {{- if .Values.scaleOnCPU }}
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: {{ .Values.HPACpuUtilTarget }}
+  {{- end }}
+  {{- if .Values.scaleOnMemory }}
+  - type: Resource
+    resource:
+      name: memory
+      targetAverageUtilization: {{ .Values.HPAMemoryUtilTarget }}
+  {{- end }}
+{{- end }}

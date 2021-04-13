@@ -1,0 +1,4 @@
+Flask
+gunicorn
+pandas
+scikit-learn
